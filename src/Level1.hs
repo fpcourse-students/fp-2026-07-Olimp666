@@ -10,11 +10,12 @@
   \  \ \  \ \    \    \  \ \ |`\\ \    \    \ `\\
    \  \ \  \ \___ \___ \__\ \|  `\ \___ \___ \  `\
 -}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 -- | Домашка 7. Свёртки: обязательные задачи.
-{-# OPTIONS_GHC -Wno-unused-matches #-}
 module Level1 where
 
+import Data.Char qualified as Char
 import Data.Function ((&))
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -22,38 +23,34 @@ import Data.Monoid (Sum (..))
 import Examples qualified as E
 import MetaUtils (todo, todoImpl)
 
-
 -- 1.1. До запуска запишите результаты литералами, без вычислений из условия.
 
 -- foldr (-) 0 [1, 2, 3] :: Integer
 predictedRight :: Integer
-predictedRight = todo "1.1 foldr"
+predictedRight = 2
 
 -- foldl (-) 0 [1, 2, 3] :: Integer
 predictedLeft :: Integer
-predictedLeft = todo "1.1 foldl"
+predictedLeft = -6
 
 -- foldMap (\x -> [x,x]) (Just (2 :: Integer))
 predictedFoldMap :: [Integer]
-predictedFoldMap = todo "1.1 foldMap"
-
+predictedFoldMap = [2, 2]
 
 -- 1.2. Найдите контрпример к E.brokenIncome в src/Examples.hs.
 -- Сдайте (заработано, расходы), на котором ответ отличается от
 -- «заработано минус сумма всех расходов». Расходы и заработок неотрицательны.
 
 incomeCounterexample :: (Integer, [Integer])
-incomeCounterexample = todo "1.2"
-
+incomeCounterexample = (6, [1, 2, 3])
 
 -- 1.3. Завершите поиск элемента через foldr.
 -- Если элемент найден в конечном префиксе, хвост не должен вычисляться:
 -- elem' 4 [1..] == True. На конечном списке без элемента верните False.
 -- Для бесконечного списка без элемента завершение не требуется.
 
-elem' :: Eq a => a -> [a] -> Bool
-elem' x = foldr (\y rest -> todo "1.3 шаг") False
-
+elem' :: (Eq a) => a -> [a] -> Bool
+elem' x = foldr (\y rest -> if y == x then True else rest) False
 
 -- 1.4. Прочитайте E.sizeViaFoldMap. Через foldMap и Sum подсчитайте
 -- элементы, удовлетворяющие предикату, в любом Foldable-контейнере.
@@ -62,9 +59,8 @@ countMatching :: (Foldable t, Num n) => (a -> Bool) -> t a -> n
 countMatching p = getSum . foldMap contribution
   where
     contribution x
-      | p x = todo "1.4 вклад подходящего элемента"
+      | p x = Sum 1
       | otherwise = Sum 0
-
 
 -- 1.5. Напишите полный инстанс Foldable самостоятельно:
 -- выберите метод, необходимые ограничения и напишите instance ... where.
@@ -76,8 +72,9 @@ countMatching p = getSum . foldMap contribution
 data Tree a = Leaf | Node a [Tree a]
   deriving (Eq, Show)
 
-todoImpl ''Foldable ''Tree
-
+instance Foldable Tree where
+  foldMap _ Leaf = mempty
+  foldMap f (Node a children) = mempty <> f a <> foldMap (foldMap f) children
 
 -- 1.6. Самостоятельно составьте цепочку преобразований через (&):
 -- посчитайте вхождения каждого слова в списке строк.
@@ -90,5 +87,12 @@ todoImpl ''Foldable ''Tree
 -- в «Алисе в Стране чудес»:
 --   make run ARGS=wc < text/alice.txt
 
+-- tokens :: [String] -> [String]
+-- tokens = concatMap (words . map normalize)
+--   where
+--     normalize c
+--       | Char.isPunctuation c = ' '
+--       | otherwise = Char.toLower c
+
 wordCount :: [String] -> Map String Int
-wordCount = todo "1.6"
+wordCount strs = strs & E.tokens & map (,1) & Map.fromListWith (+)
